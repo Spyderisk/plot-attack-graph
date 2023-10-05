@@ -515,12 +515,18 @@ def plot_link(gv, link, is_back_link, is_from_normal_op, is_highlighted, is_from
 
     attr = {"fontcolor": "black", "color": "black", "style": "solid", "penwidth": "3"}
     if CONSTRAIN_ARROWS:
-        if TOP_TO_BOTTOM:
+        if PLOT_DIRECTION == "TB":
             attr["tailport"] = "s"
             attr["headport"] = "n"
-        else:
+        elif PLOT_DIRECTION == "BT":
+            attr["tailport"] = "n"
+            attr["headport"] = "s"
+        elif PLOT_DIRECTION == "LR":
             attr["tailport"] = "e"
             attr["headport"] = "w"
+        elif PLOT_DIRECTION == "RL":
+            attr["tailport"] = "w"
+            attr["headport"] = "e"
 
     if is_from_normal_op or is_from_external_cause:
         attr["style"] = "dashed"
