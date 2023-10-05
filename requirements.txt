@@ -1,0 +1,4 @@
+boolean.py==3.8
+graphviz==0.18
+rdflib==6.0.2
+
