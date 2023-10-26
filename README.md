@@ -1,6 +1,6 @@
-# Plot Attack Tree
+# Plot Attack Graph
 
-This software creates a graphical attack tree for a Spyderisk system model. Strictly the "attack tree" is actually a "graph" (in that it can contain loops), it can also include nodes that are part of the normal operation model of a system as well as threats involved in a potential attack.
+This software creates a graphical attack graph for a Spyderisk system model. Strictly the "attack graph" is not all about "attacks", rather it shows all the prerequisite steps leading up to a (generally undesireable) consequence. In Spyderisk system models this can also include nodes that are part of the normal operation model of a system as well as threats involved in a potential attack.
 
 ## Pre-requisites
 
@@ -9,16 +9,16 @@ Python 3 is required, along with the 3rd-party libraries described in the `requi
 ## Usage
 
 ```
-usage: plot-attack-tree.py [-h] -i input_NQ_filename -o output_image_filename -d CSV_directory -m URI_fragment [URI_fragment ...]
-                           [--plot-direction {BT,TB,RL,LR}] [--current-risk] [--limit-logic] [--and] [--or] [--all-routes]
-                           [--highlight-short-routes] [--normal-ops] [--embedded-normal-ops] [--external-causes] [--default-tw]
-                           [--initial-causes] [--in-service] [--hide-confusing-misbehaviours] [--hide-misbehaviours]
-                           [--hide-secondary-threats] [--constrain-arrows] [--align-root-causes] [--align-target-misbehaviours]
-                           [--blobs] [--compact] [--hide-link-labels] [--hide-command] [--uris] [--distance-from-root]
-                           [--primary-threat-distance] [--attack-graph-controls] [--threat-graph-controls]
-                           [--attack-graph-control-strategies] [--threat-graph-control-strategies] [--threat-description]
-                           [--misbehaviour-description] [--hide-node-titles] [--hide-likelihood-in-description] [--text-width integer]
-                           [--debug-csv filename] [--debug-logical-expressions filename] [--version]
+usage: plot-attack-graph.py [-h] -i input_NQ_filename -o output_image_filename -d CSV_directory -m URI_fragment [URI_fragment ...]
+                            [--plot-direction {BT,TB,RL,LR}] [--current-risk] [--limit-logic] [--and] [--or] [--all-routes]
+                            [--highlight-short-routes] [--normal-ops] [--embedded-normal-ops] [--external-causes] [--default-tw]
+                            [--initial-causes] [--in-service] [--hide-confusing-misbehaviours] [--hide-misbehaviours]
+                            [--hide-secondary-threats] [--constrain-arrows] [--align-root-causes] [--align-target-misbehaviours]
+                            [--blobs] [--compact] [--hide-link-labels] [--hide-command] [--uris] [--distance-from-root]
+                            [--primary-threat-distance] [--attack-graph-controls] [--threat-graph-controls]
+                            [--attack-graph-control-strategies] [--threat-graph-control-strategies] [--threat-description]
+                            [--misbehaviour-description] [--hide-node-titles] [--hide-likelihood-in-description] [--text-width integer]
+                            [--debug-csv filename] [--debug-logical-expressions filename] [--version]
 ```
 
 Mandatory arguments:
@@ -109,10 +109,10 @@ For example:
    2. For each *consequence* of interest, open the "Consequence Explorer" and note down the end fragment of its URI (displayed at the top of the Explorer).
 2. Ensure your system model is validated, and then export your system model from the Spyderisk System Modeller choosing the "full model" option (it will have file extension `.nq.gz`, for example `SteelMill.nq.gz`).
 3. Obtain the version of the domain model used by your system model, for instance by cloning [https://github.com/Spyderisk/domain-network].
-4. Execute the following command, including the location of the domain model CSV folder and the *consequence* URI fragments previously noted to get a PDF file containing a graphical attack tree showing the shortest and most likely ways that the two *consequences* (also known as "misbehaviours") can be caused:
+4. Execute the following command, including the location of the domain model CSV folder and the *consequence* URI fragments previously noted to get a PDF file containing a graphical attack graph showing the shortest and most likely ways that the two *consequences* (also known as "misbehaviours") can be caused:
 
 ```shell
-plot-attack-tree.py -i SteelMill.nq.gz -o steel.pdf -d ../domain-network/csv/ -m MS-LossOfControl-f8b49f60 MS-LossOfReliability-f8b49f60 --and --or --hide-misbehaviours --hide-secondary-threats --external-causes --initial-causes --hide-link-labels --hide-likelihood-in-description --hide-node-titles --compact --text-width 30
+plot-attack-graph.py -i SteelMill.nq.gz -o steel.pdf -d ../domain-network/csv/ -m MS-LossOfControl-f8b49f60 MS-LossOfReliability-f8b49f60 --and --or --hide-misbehaviours --hide-secondary-threats --external-causes --initial-causes --hide-link-labels --hide-likelihood-in-description --hide-node-titles --compact --text-width 30
 ```
 
 ## Contributors

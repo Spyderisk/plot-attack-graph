@@ -38,14 +38,14 @@ TRUE, FALSE, NOT, AND, OR, symbol = algebra.definition()
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
-parser = argparse.ArgumentParser(description="Plot attack trees for Spyderisk system models",
-                                 epilog="e.g. plot-attack-tree.py -i SteelMill.nq.gz -o steel.pdf -d ../domain-network/csv/ -m MS-LossOfControl-f8b49f60 MS-LossOfReliability-f8b49f60 --and --or --hide-misbehaviours --hide-secondary-threats --external-causes --initial-causes --hide-link-labels --hide-likelihood-in-description --hide-node-titles --compact --text-width 30")
+parser = argparse.ArgumentParser(description="Plot attack graphs for Spyderisk system models",
+                                 epilog="e.g. plot-attack-graph.py -i SteelMill.nq.gz -o steel.pdf -d ../domain-network/csv/ -m MS-LossOfControl-f8b49f60 MS-LossOfReliability-f8b49f60 --and --or --hide-misbehaviours --hide-secondary-threats --external-causes --initial-causes --hide-link-labels --hide-likelihood-in-description --hide-node-titles --compact --text-width 30")
 parser.add_argument("-i", "--input", dest="input", required=True, metavar="input_NQ_filename", help="Filename of the validated system model NQ file (compressed or not)")
 parser.add_argument("-o", "--output", dest="output", required=True, metavar="output_image_filename", help="Output filename (PDF, SVG or PNG)")
 parser.add_argument("-d", "--domain", dest="csvs", required=True, metavar="CSV_directory", help="Directory containing the domain model CSV files")
 parser.add_argument("-m", "--misbehaviour", dest="misbehaviours", required=True, nargs="+", metavar="URI_fragment", help="Target misbehaviour IDs, e.g. 'MS-LossOfControl-f8b49f60'")
 
-parser.add_argument("--plot-direction", dest="plot_direction", choices=['BT', 'TB', 'RL', 'LR'], default='BT', help="The direction of the plot from causes to effects (B=bottom, T=top, L=left, R=right)")
+parser.add_argument("--plot-direction", dest="plot_direction", choices=['BT', 'TB', 'RL', 'LR'], default='TB', help="The direction of the plot from causes to effects (B=bottom, T=top, L=left, R=right)")
 parser.add_argument("--current-risk", action='store_true', help="Run in current (not future) risk mode, affecting the control strategies proposed")
 parser.add_argument("--limit-logic", action='store_true', help="Compute the logical expressions to only target nodes on the shortest paths")
 parser.add_argument("--and", action="store_true", help="Add explicit AND nodes to the displayed graph")
