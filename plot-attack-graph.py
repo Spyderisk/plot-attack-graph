@@ -14,6 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# <!-- SPDX-License-Identifier: Apache 2.0 -->
+# <!-- SPDX-FileCopyrightText: 2023 The University of Southampton IT Innovation Centre -->
+# <!-- SPDX-ArtifactOfProjectName: Spyderisk -->
+# <!-- SPDX-FileType: Source code -->
+# <!-- SPDX-FileComment: Original by Stephen Phillips, November 2023 -->
+
 import argparse
 import csv
 import gzip
