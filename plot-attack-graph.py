@@ -69,6 +69,9 @@ parser.add_argument("--compact", action="store_true", help="Make the plot more c
 parser.add_argument("--hide-link-labels", action="store_true", help="Hide the labels on the arrows connecting the nodes")
 parser.add_argument("--hide-command", action='store_true', help="Hide the command line from the plot")
 
+parser.add_argument("--likelihood", action='store_true', help="Show the likelihood on each node")
+parser.add_argument("--impact", action='store_true', help="Show the impact on each node")
+parser.add_argument("--risk", action='store_true', help="Show the risk on each node")
 parser.add_argument("--uris", action='store_true', help="Show the URI of each node")
 parser.add_argument("--distance-from-root", action='store_true', help="Show the distance from the root cause on a node")
 parser.add_argument("--primary-threat-distance", action='store_true', help="Show the number of primary threats needed to get to each node")
@@ -78,8 +81,8 @@ parser.add_argument("--attack-graph-control-strategies", action='store_true', he
 parser.add_argument("--threat-graph-control-strategies", action='store_true', help="Show logical expressions for controls strategies that block the threat graph on each node")
 parser.add_argument("--threat-description", action='store_true', help="Show the long threat descriptions")
 parser.add_argument("--misbehaviour-description", action='store_true', help="Show the long misbehaviour descriptions")
-parser.add_argument("--hide-node-titles", action="store_true", help="Hide the titles on the nodes")
-parser.add_argument("--hide-likelihood-in-description", action="store_true", help="Hide the likelihood in the node descriptions")
+parser.add_argument("--node-titles", action="store_true", help="Show the titles on the nodes")
+parser.add_argument("--likelihood-in-description", action="store_true", help="Show the likelihood in the node descriptions")
 parser.add_argument("--text-width", metavar="integer", default="60", help="Character-width of the text in nodes")
 
 parser.add_argument("--debug-csv", dest="csv_debug_filename", metavar="filename", help="Filename to dump CSV formatted node information for debugging")
@@ -137,11 +140,16 @@ SHOW_URI = args["uris"]  # show the URI of a node
 SHOW_BLOBS = args["blobs"]
 COMPACT = args["compact"]
 SHOW_PRIMARY_THREAT_DISTANCE = args["primary_threat_distance"]
-HIDE_NODE_TITLES = args["hide_node_titles"]
-HIDE_LIKELIHOOD_IN_DESCRIPTION = args["hide_likelihood_in_description"]
+SHOW_NODE_TITLES = args["node_titles"]
+SHOW_LIKELIHOOD_IN_DESCRIPTION = not args["likelihood_in_description"]
+SHOW_LIKELIHOOD = args["likelihood"]  # show the likelihood on each node
+SHOW_IMPACT = args["impact"]  # show the impact on each node
+SHOW_RISK = args["risk"]  # show the risk on each node
 
 # Rarely required options with no corresponding command line argument:
-SHOW_LIKELIHOOD = False  # display each node's likelihood
+SHOW_LIKELIHOOD = True  # display each node's likelihood
+SHOW_IMPACT = True  # display each Misbehavior node's impact
+SHOW_RISK = True  # display each node's (system) risk
 SHOW_ROOT_CAUSE = False  # show the root cause of each node
 SHOW_ATTACK_TREE = False  # show the attack tree on each node
 SHOW_THREAT_TREE = False  # show the threat tree on each node
@@ -179,6 +187,8 @@ HAS_TWA = URIRef(CORE + "#hasTrustworthinessAttribute")
 HAS_INFERRED_LEVEL = URIRef(CORE + "#hasInferredLevel")
 THREAT = URIRef(CORE + "#Threat")
 HAS_LIKELIHOOD = URIRef(CORE + "#hasPrior")
+HAS_IMPACT = URIRef(CORE + "#hasImpactLevel")
+HAS_RISK = URIRef(CORE + "#hasRisk")
 MISBEHAVIOUR_SET = URIRef(CORE + "#MisbehaviourSet")
 MITIGATES = URIRef(CORE + "#mitigates")
 BLOCKS = URIRef(CORE + "#blocks")
@@ -401,7 +411,7 @@ def plot_node(gv, node, is_highlighted=True, rank=None):
             if node.is_external_cause:
                 node_type = "External Cause"
                 attr["fillcolor"] = "#ffd700"
-                attr["penwidth"] = "8"
+                attr["penwidth"] = "6"
             else:
                 node_type = "Consequence"
                 if node.is_target_ms:
@@ -433,7 +443,7 @@ def plot_node(gv, node, is_highlighted=True, rank=None):
     else:
         text = []
 
-        if not HIDE_NODE_TITLES:
+        if SHOW_NODE_TITLES:
             text.append("<B>{}</B>".format(node_type))
             
         text.append(textwrap.fill(node.comment, TEXT_WIDTH))
@@ -444,8 +454,21 @@ def plot_node(gv, node, is_highlighted=True, rank=None):
         if SHOW_RANK and rank != None:
             text.append("Rank: {}".format(rank))
 
-        if SHOW_LIKELIHOOD:
-            text.append("Likelihood: {}".format(node.likelihood))
+        if not node.is_external_cause:
+            levels = []
+            if SHOW_LIKELIHOOD:
+                levels.append("Likelihood: {}".format(node.likelihood_text))
+
+            if SHOW_IMPACT and not node.is_threat:
+                levels.append("Impact: {}".format(node.impact_text))
+
+            if SHOW_RISK:
+                if node.is_threat:
+                    prefix = "System"
+                else:
+                    prefix = "Direct"
+                levels.append("{} Risk: {}".format(prefix, node.risk_text))
+            text.append("\n".join(levels))
 
     if SHOW_PRIMARY_THREAT_DISTANCE and not node.is_logic:
         text.append("{}".format(node.min_primary_threat_distance))
@@ -597,7 +620,7 @@ def get_threat_comment(uriref):
     """Return the first part of the threat description (up to the colon) and add in the likelihood if so configured"""
     comment = _get_threat_comment(uriref)
     comment = comment.replace('re-disabled at "Router"', 're-enabled at "Router"')  # hack that is necessary to correct an error in v6a3-1-4 for the overview paper system model
-    if HIDE_LIKELIHOOD_IN_DESCRIPTION:
+    if not SHOW_LIKELIHOOD_IN_DESCRIPTION:
         return comment
     else:
         likelihood = un_camel_case(get_likelihood_text(uriref))
@@ -629,12 +652,12 @@ def get_ms_comment(uriref):
         aspect = un_camel_case(consequence[3:])
         consequence = "is not"
     if aspect != None:
-        if HIDE_LIKELIHOOD_IN_DESCRIPTION and uriref not in target_ms_uris:
+        if not SHOW_LIKELIHOOD_IN_DESCRIPTION and uriref not in target_ms_uris:
             return '"{}" {} {}'.format(un_camel_case(asset), consequence, aspect)
         else:
             return '{} likelihood that "{}" {} {}'.format(likelihood, un_camel_case(asset), consequence, aspect)
     else:
-        if HIDE_LIKELIHOOD_IN_DESCRIPTION and uriref not in target_ms_uris:
+        if not SHOW_LIKELIHOOD_IN_DESCRIPTION and uriref not in target_ms_uris:
             return '{} at {}'.format(un_camel_case(consequence), un_camel_case(asset))
         else:
             return '{} likelihood of: {} at {}'.format(likelihood, un_camel_case(consequence), un_camel_case(asset))
@@ -1046,6 +1069,14 @@ class TreeNode():
     @property
     def likelihood_text(self):
         return get_likelihood_text(self.uri)
+
+    @property
+    def impact_text(self):
+        return get_impact_text(self.uri)
+    
+    @property
+    def risk_text(self):
+        return get_risk_text(self.uri)
 
     @property
     def is_normal_op(self):
@@ -1687,7 +1718,7 @@ def get_likelihood_number(uriref):
     Caches the level in global _likelihood dictionary
     """
     try:
-        # TODO: probbaly don't need this cache
+        # TODO: probably don't need this cache
         return _likelihood[uriref]  # global!
     except:
         like = _get_likelihood(uriref)
@@ -1701,9 +1732,31 @@ def get_likelihood_text(uriref):
 
 def _get_likelihood(uriref):
     try:
-        like = graph.value(uriref, HAS_LIKELIHOOD)
-        # like is e.g. http://it-innovation.soton.ac.uk/ontologies/trustworthiness/domain#LikelihoodVeryLow
-        return str(like).split('#')[-1][10:]
+        level = graph.value(uriref, HAS_LIKELIHOOD)
+        # level is e.g. http://it-innovation.soton.ac.uk/ontologies/trustworthiness/domain#LikelihoodVeryLow
+        return str(level).split('#')[-1][10:]
+    except:
+        return "None"
+
+def get_impact_text(uriref):
+    return un_camel_case(_get_impact(uriref))
+
+def _get_impact(uriref):
+    try:
+        level = graph.value(uriref, HAS_IMPACT)
+        # level is e.g. http://it-innovation.soton.ac.uk/ontologies/trustworthiness/domain#ImpactLevelMedium
+        return str(level).split('#')[-1][11:]
+    except:
+        return "None"
+
+def get_risk_text(uriref):
+    return un_camel_case(_get_risk(uriref))
+
+def _get_risk(uriref):
+    try:
+        level = graph.value(uriref, HAS_RISK)
+        # level is e.g. http://it-innovation.soton.ac.uk/ontologies/trustworthiness/domain#RiskLevelMedium
+        return str(level).split('#')[-1][9:]
     except:
         return "None"
 
@@ -1713,7 +1766,7 @@ def get_trustworthiness_text(uriref):
 def _get_trustworthiness(uriref):
     try:
         tw = graph.value(uriref, HAS_INFERRED_LEVEL)
-        # like is e.g. http://it-innovation.soton.ac.uk/ontologies/trustworthiness/domain#TrustworthinessLevelVeryLow
+        # level is e.g. http://it-innovation.soton.ac.uk/ontologies/trustworthiness/domain#TrustworthinessLevelVeryLow
         return str(tw).split('#')[-1][20:]
     except:
         return "None"
