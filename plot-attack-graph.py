@@ -426,10 +426,10 @@ def plot_node(gv, node, is_highlighted=True, rank=None):
         attr["shape"] = "circle"
         if node.is_threat and not node.is_secondary_threat:
             attr["shape"] = "square"
-        if node.index != None:
-            text = str(node.index)
-        else:
-            text = [""]
+        # if node.index != None:
+        #     text = [str(node.index)]
+        # else:
+        text = []
     else:
         text = []
 
@@ -447,11 +447,11 @@ def plot_node(gv, node, is_highlighted=True, rank=None):
         if SHOW_LIKELIHOOD:
             text.append("Likelihood: {}".format(node.likelihood))
 
-    if SHOW_PRIMARY_THREAT_DISTANCE:
-        text.append("Primary threat distance: {}".format(node.min_primary_threat_distance))
+    if SHOW_PRIMARY_THREAT_DISTANCE and not node.is_logic:
+        text.append("{}".format(node.min_primary_threat_distance))
 
-    if SHOW_DISTANCE_FROM_ROOT and node.min_distance_from_root > 0:
-        text.append("Distance from root: {}/{}".format(node.min_distance_from_root, node.max_distance_from_root))
+    if SHOW_DISTANCE_FROM_ROOT and node.min_distance_from_root > 0 and not node.is_logic:
+        text.append("{}/{}".format(node.min_distance_from_root, node.max_distance_from_root))
 
     if SHOW_ROOT_CAUSE and not node.is_root_cause and not node.is_external_cause and not node.is_initial_cause:
         text.append("Root cause:\n" + str(node.root_cause).replace("\n", "\l") + "\l")
@@ -539,6 +539,7 @@ def plot_link(gv, link, is_back_link, is_from_normal_op, is_highlighted, is_from
     gv.edge(start_uri[7:], end_uri[7:], label, **attr)
 
 def un_camel_case(text):
+    text = text.strip()
     if text == "": return "****"
     text = text.replace("TW", "Trustworthiness")
     if text[0] == "[":
@@ -579,9 +580,8 @@ def get_comment(uriref):
 
     return label
 
-def get_threat_comment(uriref):
+def _get_threat_comment(uriref):
     """Return the first part of the threat description (up to the colon)"""
-    likelihood = un_camel_case(get_likelihood_text(uriref))
     comment = graph.value(subject=uriref, predicate=HAS_COMMENT)
     quote_counter = 0
     char_index = 0
@@ -591,15 +591,21 @@ def get_threat_comment(uriref):
             quote_counter += 1
         char_index += 1
     comment = comment[0:char_index]
-    # comment = comment.replace('re-disabled at "Router"', 're-enabled at "Router"')  # hack that is necessary to correct an error in v6a3-1-4 for the overview paper system model
+    return comment
+
+def get_threat_comment(uriref):
+    """Return the first part of the threat description (up to the colon) and add in the likelihood if so configured"""
+    comment = _get_threat_comment(uriref)
+    comment = comment.replace('re-disabled at "Router"', 're-enabled at "Router"')  # hack that is necessary to correct an error in v6a3-1-4 for the overview paper system model
     if HIDE_LIKELIHOOD_IN_DESCRIPTION:
         return comment
     else:
+        likelihood = un_camel_case(get_likelihood_text(uriref))
         return '{} likelihood of: {}'.format(likelihood, comment)
 
 def get_threat_description(uriref):
     """Return the longer description of a threat (after the colon)"""
-    short_comment = get_threat_comment(uriref)
+    short_comment = _get_threat_comment(uriref)
     comment = graph.value(subject=uriref, predicate=HAS_COMMENT)
     comment = comment[len(short_comment) + 1:]  # remove the short comment from the start
     comment = comment.lstrip()  # there is conventionally a space after the colon
@@ -617,10 +623,10 @@ def get_ms_comment(uriref):
         aspect = un_camel_case(consequence[6:])
         consequence = "loses"
     elif consequence.startswith("Loss Of"):
-        aspect = un_camel_case(consequence[8:])
+        aspect = un_camel_case(consequence[7:])
         consequence = "loses"
     elif consequence.startswith("Not"):
-        aspect = un_camel_case(consequence[4:])
+        aspect = un_camel_case(consequence[3:])
         consequence = "is not"
     if aspect != None:
         if HIDE_LIKELIHOOD_IN_DESCRIPTION and uriref not in target_ms_uris:
@@ -759,7 +765,7 @@ class LogicalExpression():
     def uris(self):
         return set([URIRef(SYSTEM + "#" + str(symbol)) for symbol in self.cause.get_symbols()])
 
-    def pretty_print(self, max_complexity=20):
+    def pretty_print(self, max_complexity=30):
         if self.cause is None:
             return "-None-"
         cause_complexity = str(self.cause.args).count("Symbol")
@@ -2016,6 +2022,7 @@ if (ADD_ANDS or ADD_ORS) and (not SHOW_NORMAL_OPS or not SHOW_EMBEDDED_NORMAL_OP
             if node.is_logic:
                 cause_links_in_graph = [link for link in cause_links_by_node[node] if link[0] in nodes]
                 effect_links_in_graph = [link for link in effect_links_by_node[node] if link[2] in nodes]
+                # logging.debug("Looking at logic node {} ({} cause links, {} effect links)".format(str(node.uri).split('#')[1], str(len(cause_links_in_graph)), str(len(effect_links_in_graph))))
                 # reasons to remove a logic node:
                 #   it has no causes in the graph: happens when its logic node in normal-ops graph that's been isolated by normal-ops being hidden
                 #   it has 1 cause in the graph: happens all the time because of input nodes being hidden
