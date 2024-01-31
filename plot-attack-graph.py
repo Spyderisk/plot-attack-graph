@@ -78,7 +78,7 @@ parser.add_argument("--hide-command", action='store_true', help="Hide the comman
 parser.add_argument("--likelihood", action='store_true', help="Show the likelihood on each node")
 parser.add_argument("--impact", action='store_true', help="Show the impact on each node")
 parser.add_argument("--risk", action='store_true', help="Show the risk on each node")
-parser.add_argument("--uris", action='store_true', help="Show the URI of each node")
+parser.add_argument("--uri", action='store_true', help="Show the URI of each node")
 parser.add_argument("--distance-from-root", action='store_true', help="Show the distance from the root cause on a node")
 parser.add_argument("--primary-threat-distance", action='store_true', help="Show the number of primary threats needed to get to each node")
 parser.add_argument("--attack-graph-controls", action='store_true', help="Show logical expressions for controls that block the attack graph on each node")
@@ -87,7 +87,7 @@ parser.add_argument("--attack-graph-control-strategies", action='store_true', he
 parser.add_argument("--threat-graph-control-strategies", action='store_true', help="Show logical expressions for controls strategies that block the threat graph on each node")
 parser.add_argument("--threat-description", action='store_true', help="Show the long threat descriptions")
 parser.add_argument("--misbehaviour-description", action='store_true', help="Show the long misbehaviour descriptions")
-parser.add_argument("--node-titles", action="store_true", help="Show the titles on the nodes")
+parser.add_argument("--node-title", action="store_true", help="Show the titles on the nodes")
 parser.add_argument("--likelihood-in-description", action="store_true", help="Show the likelihood in the node descriptions")
 parser.add_argument("--text-width", metavar="integer", default="60", help="Character-width of the text in nodes")
 
@@ -142,11 +142,11 @@ SHOW_ATTACK_MITIGATION_CS = args["attack_graph_controls"]  # show the attack tre
 SHOW_THREAT_MITIGATION_CS = args["threat_graph_controls"]  # show the threat tree control set mitigation Boolean expression on each node
 SHOW_ATTACK_MITIGATION_CSG = args["attack_graph_control_strategies"]  # show the attack tree control strategy mitigation Boolean expression on each node
 SHOW_THREAT_MITIGATION_CSG = args["threat_graph_control_strategies"]  # show the threat tree control strategy mitigation Boolean expression on each node
-SHOW_URI = args["uris"]  # show the URI of a node
+SHOW_URI = args["uri"]  # show the URI of a node
 SHOW_BLOBS = args["blobs"]
 COMPACT = args["compact"]
 SHOW_PRIMARY_THREAT_DISTANCE = args["primary_threat_distance"]
-SHOW_NODE_TITLES = args["node_titles"]
+SHOW_NODE_TITLE = args["node_title"]
 SHOW_LIKELIHOOD_IN_DESCRIPTION = not args["likelihood_in_description"]
 SHOW_LIKELIHOOD = args["likelihood"]  # show the likelihood on each node
 SHOW_IMPACT = args["impact"]  # show the impact on each node
@@ -449,7 +449,7 @@ def plot_node(gv, node, is_highlighted=True, rank=None):
     else:
         text = []
 
-        if SHOW_NODE_TITLES:
+        if SHOW_NODE_TITLE:
             text.append("<B>{}</B>".format(node_type))
             
         text.append(textwrap.fill(node.comment, TEXT_WIDTH))
