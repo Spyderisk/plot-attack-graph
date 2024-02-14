@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "spyderisk",
+        "projectKey": "Spyderisk_plot-attack-graph"
+    }
+}

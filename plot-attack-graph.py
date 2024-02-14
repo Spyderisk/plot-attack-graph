@@ -379,6 +379,10 @@ def plot_node(gv, node, is_highlighted=True, rank=None):
         attr["fillcolor"] = "#65ff65"
         attr["shape"] = "hexagon"
         attr["margin"] = "0.1"
+        hex_size = 0.75
+        attr["width"] = str(hex_size)
+        attr["height"] = str(hex_size * (3**0.5) / 2)
+        attr["fixedsize"] = "true"
     elif node.is_threat:
         if node.is_normal_op:
             if node.is_initial_cause:
