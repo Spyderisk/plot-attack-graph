@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright 2023 University of Southampton IT Innovation Centre
+# Copyright 2023-2024 University of Southampton IT Innovation Centre
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -147,15 +147,12 @@ SHOW_BLOBS = args["blobs"]
 COMPACT = args["compact"]
 SHOW_PRIMARY_THREAT_DISTANCE = args["primary_threat_distance"]
 SHOW_NODE_TITLE = args["node_title"]
-SHOW_LIKELIHOOD_IN_DESCRIPTION = not args["likelihood_in_description"]
+SHOW_LIKELIHOOD_IN_DESCRIPTION = args["likelihood_in_description"]
 SHOW_LIKELIHOOD = args["likelihood"]  # show the likelihood on each node
 SHOW_IMPACT = args["impact"]  # show the impact on each node
 SHOW_RISK = args["risk"]  # show the risk on each node
 
 # Rarely required options with no corresponding command line argument:
-SHOW_LIKELIHOOD = True  # display each node's likelihood
-SHOW_IMPACT = True  # display each Misbehavior node's impact
-SHOW_RISK = True  # display each node's (system) risk
 SHOW_ROOT_CAUSE = False  # show the root cause of each node
 SHOW_ATTACK_TREE = False  # show the attack tree on each node
 SHOW_THREAT_TREE = False  # show the threat tree on each node
