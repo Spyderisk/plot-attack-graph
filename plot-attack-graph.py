@@ -371,14 +371,13 @@ def plot_graph(filename, nodes_to_plot, links_to_plot, rank_by_uri, highlighted_
     gv.render(filename)
 
 def plot_node(gv, node, is_highlighted=True, rank=None):
-    attr = {"style": "filled", "color": "#333333", "margin": "0.3,0.3"}
+    attr = {"style": "filled", "color": "#333333", "margin": "0"}
 
     uriref = node.uri
 
     if node.is_logic:
         attr["fillcolor"] = "#65ff65"
         attr["shape"] = "hexagon"
-        attr["margin"] = "0.1"
         hex_size = 0.75
         attr["width"] = str(hex_size)
         attr["height"] = str(hex_size * (3**0.5) / 2)
@@ -431,9 +430,6 @@ def plot_node(gv, node, is_highlighted=True, rank=None):
     if ALIGN_ROOT_CAUSES or ALIGN_TARGET_MISBEHAVIOURS:
         attr["rank"] = str(rank)
 
-    if COMPACT:
-        attr["margin"] = "0.1"
-
     if node.is_logic:
         if node.is_and:
             text = ["AND"]
@@ -463,19 +459,32 @@ def plot_node(gv, node, is_highlighted=True, rank=None):
 
         if not node.is_external_cause:
             levels = []
-            if SHOW_LIKELIHOOD:
-                levels.append("Likelihood: {}".format(node.likelihood_text))
+            if COMPACT:
+                line = []
+                if SHOW_IMPACT and not node.is_threat:
+                    line.append("I:{}".format(node.impact_text))
+                if SHOW_LIKELIHOOD:
+                    line.append("L:{}".format(node.likelihood_text))
+                if SHOW_RISK:
+                    line.append("R:{}".format(node.risk_text))
+                line = " / ".join(line)
+                levels.append(line)
+            else:
+                if SHOW_IMPACT and not node.is_threat:
+                    levels.append("Impact: {}".format(node.impact_text))
 
-            if SHOW_IMPACT and not node.is_threat:
-                levels.append("Impact: {}".format(node.impact_text))
+                if SHOW_LIKELIHOOD:
+                    levels.append("Likelihood: {}".format(node.likelihood_text))
 
-            if SHOW_RISK:
-                if node.is_threat:
-                    prefix = "System"
-                else:
-                    prefix = "Direct"
-                levels.append("{} Risk: {}".format(prefix, node.risk_text))
-            text.append("\n".join(levels))
+                if SHOW_RISK:
+                    if node.is_threat:
+                        prefix = "System"
+                    else:
+                        prefix = "Direct"
+                    levels.append("{} Risk: {}".format(prefix, node.risk_text))
+            
+            if len(levels) > 0:
+                text.append("\n".join(levels))
 
     if SHOW_PRIMARY_THREAT_DISTANCE and not node.is_logic:
         text.append("{}".format(node.min_primary_threat_distance))
@@ -528,11 +537,17 @@ def plot_node(gv, node, is_highlighted=True, rank=None):
     if SHOW_URI:
         text.append("<I>" + str(uriref).split('#')[1] + "</I>")
 
-    text = "<BR/><BR/>".join(text)
-    text = text.replace("\n", "<BR/>")
-    text = text.replace("\l", '<BR ALIGN="LEFT"/>')
-    
-    text = "<" + text + ">"
+    if not node.is_logic:
+        text = "</td></tr><tr><td>".join(text)
+        text = text.replace("\n", "<BR/>")
+        text = text.replace("\l", '<BR ALIGN="LEFT"/>')
+        if COMPACT:
+            padding = "5"
+        else:
+            padding = "10"
+        text = "<<table border='0' cellborder='1' cellpadding='" + padding + "' cellspacing='0'><tr><td>" + text + "</td></tr></table>>"
+    else:
+        text = text[0]
     gv.node(uriref[7:], text, **attr)
 
 def plot_link(gv, link, is_back_link, is_from_normal_op, is_highlighted, is_from_external_cause):
@@ -659,12 +674,12 @@ def get_ms_comment(uriref):
         aspect = un_camel_case(consequence[3:])
         consequence = "is not"
     if aspect != None:
-        if not SHOW_LIKELIHOOD_IN_DESCRIPTION and uriref not in target_ms_uris:
+        if not SHOW_LIKELIHOOD_IN_DESCRIPTION:
             return '"{}" {} {}'.format(un_camel_case(asset), consequence, aspect)
         else:
             return '{} likelihood that "{}" {} {}'.format(likelihood, un_camel_case(asset), consequence, aspect)
     else:
-        if not SHOW_LIKELIHOOD_IN_DESCRIPTION and uriref not in target_ms_uris:
+        if not SHOW_LIKELIHOOD_IN_DESCRIPTION:
             return '{} at {}'.format(un_camel_case(consequence), un_camel_case(asset))
         else:
             return '{} likelihood of: {} at {}'.format(likelihood, un_camel_case(consequence), un_camel_case(asset))
