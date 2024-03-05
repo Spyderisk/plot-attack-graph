@@ -101,7 +101,7 @@ args = vars(raw)
 
 nq_filename = args["input"]
 csv_directory = args["csvs"]
-output_filename, output_format = args["output"].split(".")
+output_filename, _, output_format = args["output"].rpartition(".")
 target_ms_ids = args["misbehaviours"]
 
 domain_misbehaviours_filename = Path(csv_directory) / "Misbehaviour.csv"
