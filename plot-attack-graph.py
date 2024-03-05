@@ -262,17 +262,22 @@ def load_domain_controls(filename):
     return control
 
 def load_domain_control_strategies(filename):
-    """Load control strategies from the domain model so that we can use the labels"""
+    """Load control strategies from the domain model so that we can use the labels and current/future attributes"""
     csg = {}
     with open(filename, newline="") as csvfile:
         reader = csv.reader(csvfile)
         header = next(reader)
         uri_index = header.index("URI")
         label_index = header.index("label")
+        current_index = False if header.index("currentRisk") == "FALSE" else True
+        future_index = False if header.index("futureRisk") == "FALSE" else True
         for row in reader:
             if DUMMY_URI in row: continue
-            csg[row[uri_index]] = {}
-            csg[row[uri_index]]["label"] = row[label_index]
+            uri = row[uri_index]
+            csg[uri] = {}
+            csg[uri]["label"] = row[label_index]
+            csg[uri]["currentRisk"] = row[current_index]
+            csg[uri]["futureRisk"] = row[future_index]
     return csg
 
 def load_domain_ca_settings(filename):
@@ -1615,10 +1620,18 @@ def is_current_risk_csg(csg_uriref):
     # accept just -Runtime, -Implementation and -Implementation-Runtime
     return ("-Runtime" in str(csg_uriref)) or ("-Implementation" in str(csg_uriref))
 
+    # new style
+    # first find the CSG in the domain model, then do this check
+    # return csg[dm_csg_uriref]["currentRisk"] && ("-Runtime" in str(dm_csg_uriref)) or ("-Implementation" in str(dm_csg_uriref))
+
 # TODO: this needs to change to use the new predicates rather than rely on string matching
 def is_future_risk_csg(csg_uriref):
     # ignore Implementation-Runtime, and -Implementation. Keep "-Runtime".
     return not ("-Implementation-Runtime" in str(csg_uriref) or "-Implementation" in str(csg_uriref))
+
+    # new style
+    # first find the CSG in the domain model, then do this check
+    # return csg[dm_csg_uriref]["futureRisk"]
 
 # TODO: this is broken because the URI can no longer be manipulated this way
 def get_contingency_plan_csg(csg_uriref):
@@ -1653,6 +1666,7 @@ def get_threat_control_strategy_uris(threat_uri, future_risk=True):
     csg_uris = []
     # the "blocks" predicate means a CSG appropriate for current or future risk calc
     # the "mitigates" predicate means a CSG appropriate for future risk (often a contingency plan for a current risk CSG); excluded from likelihood calc in current risk
+    # The "mitigates" predicate is not used in newer domain models
     if future_risk:
         for csg_uri in chain(graph.subjects(BLOCKS, threat_uri), graph.subjects(MITIGATES, threat_uri)):
             if is_future_risk_csg(csg_uri):
